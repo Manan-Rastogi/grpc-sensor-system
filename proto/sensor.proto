@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package sensor;
+
+// Tells protoc where to put Go files
+option go_package= "./proto;sensor";
+
+// Message send from Client to Server
+message SensorData {
+    string id = 1;
+    float temperature = 2;
+    int64 timestamp = 3;
+}
+
+// Server Response
+message ServerResponse {
+    string status = 1;
+}
+
+// gRPC Service
+service SensorService {
+    rpc SendSensorData(SensorData) returns (ServerResponse);
+}

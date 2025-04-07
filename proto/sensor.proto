@@ -28,6 +28,9 @@ service SensorService {
 
     // server streaming-> Case here---> Build a live feed system, where I (client) ask you (server) to stream sensor updates for a given sensor ID.
     rpc GetSensorDataStream(SensorRequest) returns (stream SensorData);
+
+    // Client Streaming --> Eg: Batch Upload
+    rpc UploadSensorBatch(stream SensorData) returns (ServerResponse);
 }
 
 

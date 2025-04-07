@@ -4,10 +4,12 @@ import (
 	"context"
 	"io"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 
 	proto "github.com/Manan-Rastogi/grpc-sensor-system/proto"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -25,7 +27,44 @@ func main() {
 
 	// ProducerConsumerSoln(client)
 
-	ServerStreamingSoln(client)
+	// ServerStreamingSoln(client)
+
+	ClientStreamigSoln(client)
+}
+
+func ClientStreamigSoln(client proto.SensorServiceClient) {
+	var batch []*proto.SensorData
+	for i := 0; i < 10; i++ {
+		batch = append(batch, &proto.SensorData{
+			Id:          uuid.New().String(),
+			Temperature: rand.Float32()*50 + 20,
+			Timestamp:   time.Now().Unix(),
+		})
+	}
+
+	UploadSensorBatch(client, batch)
+}
+
+func UploadSensorBatch(client proto.SensorServiceClient, dataList []*proto.SensorData) {
+	stream, err := client.UploadSensorBatch(context.Background())
+	if err != nil {
+		log.Fatalf("Error starting client stream: %v", err)
+	}
+
+	for _, data := range dataList {
+		log.Printf("Sending data ID: %s\n", data.Id)
+		if err := stream.Send(data); err != nil {
+			log.Fatalf("Error sending data: %v", err)
+		}
+	}
+
+	// Close the stream and receive response
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("Error receiving response: %v", err)
+	}
+
+	log.Println("Upload finished with response:", resp.Status)
 }
 
 func ServerStreamingSoln(client proto.SensorServiceClient) {
@@ -40,7 +79,7 @@ func ServerStreamingSoln(client proto.SensorServiceClient) {
 
 	for {
 		data, err := stream.Recv()
-		if err == io.EOF{
+		if err == io.EOF {
 			break
 		}
 
@@ -51,7 +90,6 @@ func ServerStreamingSoln(client proto.SensorServiceClient) {
 		log.Printf("Streamed Sensor Data: %+v", data)
 	}
 }
-
 
 func ProducerConsumerSoln(client proto.SensorServiceClient) {
 	// 2. Challange Soln inplemented...

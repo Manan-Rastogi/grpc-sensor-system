@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
 	"math/rand/v2"
 	"net"
@@ -44,10 +46,31 @@ func (s *SensorServer) GetSensorDataStream(req *proto.SensorRequest, stream grpc
 			return err
 		}
 
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 
 	return nil
+}
+
+func (s *SensorServer) UploadSensorBatch(stream grpc.ClientStreamingServer[proto.SensorData, proto.ServerResponse]) error {
+	count := 0
+
+	for {
+		data, err := stream.Recv()
+		if err == io.EOF {
+			// All data received
+			return stream.SendAndClose(&proto.ServerResponse{
+				Status: fmt.Sprintf("Received %d sensor records.", count),
+			})
+		}
+		if err != nil {
+			log.Println("Error receiving stream:", err)
+			return err
+		}
+
+		log.Printf("Received SensorData: ID=%s, Temp=%.2f\n", data.Id, data.Temperature)
+		count++
+	}
 }
 
 func main() {

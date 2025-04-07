@@ -17,7 +17,17 @@ message ServerResponse {
     string status = 1;
 }
 
+// Sensor Request
+message SensorRequest {
+    string sensor_id = 1;
+}
+
 // gRPC Service
 service SensorService {
     rpc SendSensorData(SensorData) returns (ServerResponse);
+
+    // server streaming-> Case here---> Build a live feed system, where I (client) ask you (server) to stream sensor updates for a given sensor ID.
+    rpc GetSensorDataStream(SensorRequest) returns (stream SensorData);
 }
+
+

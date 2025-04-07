@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log"
 	"sync"
 	"time"
@@ -22,7 +23,33 @@ func main() {
 
 	client := proto.NewSensorServiceClient(conn)
 
-	ProducerConsumerSoln(client)
+	// ProducerConsumerSoln(client)
+
+	ServerStreamingSoln(client)
+}
+
+func ServerStreamingSoln(client proto.SensorServiceClient) {
+	req := &proto.SensorRequest{
+		SensorId: "sensor_112",
+	}
+
+	stream, err := client.GetSensorDataStream(context.Background(), req)
+	if err != nil {
+		log.Fatalf("Error starting stream: %v", err)
+	}
+
+	for {
+		data, err := stream.Recv()
+		if err == io.EOF{
+			break
+		}
+
+		if err != nil {
+			log.Fatalf("Error receiving data: %v", err.Error())
+		}
+
+		log.Printf("Streamed Sensor Data: %+v", data)
+	}
 }
 
 

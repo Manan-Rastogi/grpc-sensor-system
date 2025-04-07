@@ -19,7 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SensorService_SendSensorData_FullMethodName = "/sensor.SensorService/SendSensorData"
+	SensorService_SendSensorData_FullMethodName      = "/sensor.SensorService/SendSensorData"
+	SensorService_GetSensorDataStream_FullMethodName = "/sensor.SensorService/GetSensorDataStream"
 )
 
 // SensorServiceClient is the client API for SensorService service.
@@ -29,6 +30,8 @@ const (
 // gRPC Service
 type SensorServiceClient interface {
 	SendSensorData(ctx context.Context, in *SensorData, opts ...grpc.CallOption) (*ServerResponse, error)
+	// server streaming-> Case here---> Build a live feed system, where I (client) ask you (server) to stream sensor updates for a given sensor ID.
+	GetSensorDataStream(ctx context.Context, in *SensorRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SensorData], error)
 }
 
 type sensorServiceClient struct {
@@ -49,6 +52,25 @@ func (c *sensorServiceClient) SendSensorData(ctx context.Context, in *SensorData
 	return out, nil
 }
 
+func (c *sensorServiceClient) GetSensorDataStream(ctx context.Context, in *SensorRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SensorData], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &SensorService_ServiceDesc.Streams[0], SensorService_GetSensorDataStream_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SensorRequest, SensorData]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type SensorService_GetSensorDataStreamClient = grpc.ServerStreamingClient[SensorData]
+
 // SensorServiceServer is the server API for SensorService service.
 // All implementations must embed UnimplementedSensorServiceServer
 // for forward compatibility.
@@ -56,6 +78,8 @@ func (c *sensorServiceClient) SendSensorData(ctx context.Context, in *SensorData
 // gRPC Service
 type SensorServiceServer interface {
 	SendSensorData(context.Context, *SensorData) (*ServerResponse, error)
+	// server streaming-> Case here---> Build a live feed system, where I (client) ask you (server) to stream sensor updates for a given sensor ID.
+	GetSensorDataStream(*SensorRequest, grpc.ServerStreamingServer[SensorData]) error
 	mustEmbedUnimplementedSensorServiceServer()
 }
 
@@ -68,6 +92,9 @@ type UnimplementedSensorServiceServer struct{}
 
 func (UnimplementedSensorServiceServer) SendSensorData(context.Context, *SensorData) (*ServerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendSensorData not implemented")
+}
+func (UnimplementedSensorServiceServer) GetSensorDataStream(*SensorRequest, grpc.ServerStreamingServer[SensorData]) error {
+	return status.Errorf(codes.Unimplemented, "method GetSensorDataStream not implemented")
 }
 func (UnimplementedSensorServiceServer) mustEmbedUnimplementedSensorServiceServer() {}
 func (UnimplementedSensorServiceServer) testEmbeddedByValue()                       {}
@@ -108,6 +135,17 @@ func _SensorService_SendSensorData_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SensorService_GetSensorDataStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SensorRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SensorServiceServer).GetSensorDataStream(m, &grpc.GenericServerStream[SensorRequest, SensorData]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type SensorService_GetSensorDataStreamServer = grpc.ServerStreamingServer[SensorData]
+
 // SensorService_ServiceDesc is the grpc.ServiceDesc for SensorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -120,6 +158,12 @@ var SensorService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SensorService_SendSensorData_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetSensorDataStream",
+			Handler:       _SensorService_GetSensorDataStream_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/sensor.proto",
 }

@@ -31,6 +31,9 @@ service SensorService {
 
     // Client Streaming --> Eg: Batch Upload
     rpc UploadSensorBatch(stream SensorData) returns (ServerResponse);
+
+    // Bidirectional 
+    rpc LiveSensorChats(stream SensorData) returns (stream ServerResponse);
 }
 
 

@@ -22,6 +22,7 @@ const (
 	SensorService_SendSensorData_FullMethodName      = "/sensor.SensorService/SendSensorData"
 	SensorService_GetSensorDataStream_FullMethodName = "/sensor.SensorService/GetSensorDataStream"
 	SensorService_UploadSensorBatch_FullMethodName   = "/sensor.SensorService/UploadSensorBatch"
+	SensorService_LiveSensorChats_FullMethodName     = "/sensor.SensorService/LiveSensorChats"
 )
 
 // SensorServiceClient is the client API for SensorService service.
@@ -35,6 +36,8 @@ type SensorServiceClient interface {
 	GetSensorDataStream(ctx context.Context, in *SensorRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[SensorData], error)
 	// Client Streaming --> Eg: Batch Upload
 	UploadSensorBatch(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[SensorData, ServerResponse], error)
+	// Bidirectional
+	LiveSensorChats(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SensorData, ServerResponse], error)
 }
 
 type sensorServiceClient struct {
@@ -87,6 +90,19 @@ func (c *sensorServiceClient) UploadSensorBatch(ctx context.Context, opts ...grp
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SensorService_UploadSensorBatchClient = grpc.ClientStreamingClient[SensorData, ServerResponse]
 
+func (c *sensorServiceClient) LiveSensorChats(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SensorData, ServerResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &SensorService_ServiceDesc.Streams[2], SensorService_LiveSensorChats_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[SensorData, ServerResponse]{ClientStream: stream}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type SensorService_LiveSensorChatsClient = grpc.BidiStreamingClient[SensorData, ServerResponse]
+
 // SensorServiceServer is the server API for SensorService service.
 // All implementations must embed UnimplementedSensorServiceServer
 // for forward compatibility.
@@ -98,6 +114,8 @@ type SensorServiceServer interface {
 	GetSensorDataStream(*SensorRequest, grpc.ServerStreamingServer[SensorData]) error
 	// Client Streaming --> Eg: Batch Upload
 	UploadSensorBatch(grpc.ClientStreamingServer[SensorData, ServerResponse]) error
+	// Bidirectional
+	LiveSensorChats(grpc.BidiStreamingServer[SensorData, ServerResponse]) error
 	mustEmbedUnimplementedSensorServiceServer()
 }
 
@@ -116,6 +134,9 @@ func (UnimplementedSensorServiceServer) GetSensorDataStream(*SensorRequest, grpc
 }
 func (UnimplementedSensorServiceServer) UploadSensorBatch(grpc.ClientStreamingServer[SensorData, ServerResponse]) error {
 	return status.Errorf(codes.Unimplemented, "method UploadSensorBatch not implemented")
+}
+func (UnimplementedSensorServiceServer) LiveSensorChats(grpc.BidiStreamingServer[SensorData, ServerResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method LiveSensorChats not implemented")
 }
 func (UnimplementedSensorServiceServer) mustEmbedUnimplementedSensorServiceServer() {}
 func (UnimplementedSensorServiceServer) testEmbeddedByValue()                       {}
@@ -174,6 +195,13 @@ func _SensorService_UploadSensorBatch_Handler(srv interface{}, stream grpc.Serve
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type SensorService_UploadSensorBatchServer = grpc.ClientStreamingServer[SensorData, ServerResponse]
 
+func _SensorService_LiveSensorChats_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(SensorServiceServer).LiveSensorChats(&grpc.GenericServerStream[SensorData, ServerResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type SensorService_LiveSensorChatsServer = grpc.BidiStreamingServer[SensorData, ServerResponse]
+
 // SensorService_ServiceDesc is the grpc.ServiceDesc for SensorService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -195,6 +223,12 @@ var SensorService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "UploadSensorBatch",
 			Handler:       _SensorService_UploadSensorBatch_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "LiveSensorChats",
+			Handler:       _SensorService_LiveSensorChats_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

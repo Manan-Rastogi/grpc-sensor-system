@@ -29,7 +29,9 @@ func main() {
 
 	// ServerStreamingSoln(client)
 
-	ClientStreamigSoln(client)
+	// ClientStreamigSoln(client)
+
+	BidirectionalSoln(client)
 }
 
 func ClientStreamigSoln(client proto.SensorServiceClient) {

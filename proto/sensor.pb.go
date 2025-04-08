@@ -185,11 +185,12 @@ const file_proto_sensor_proto_rawDesc = "" +
 	"\x0eServerResponse\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\",\n" +
 	"\rSensorRequest\x12\x1b\n" +
-	"\tsensor_id\x18\x01 \x01(\tR\bsensorId2\xd4\x01\n" +
+	"\tsensor_id\x18\x01 \x01(\tR\bsensorId2\x97\x02\n" +
 	"\rSensorService\x12<\n" +
 	"\x0eSendSensorData\x12\x12.sensor.SensorData\x1a\x16.sensor.ServerResponse\x12B\n" +
 	"\x13GetSensorDataStream\x12\x15.sensor.SensorRequest\x1a\x12.sensor.SensorData0\x01\x12A\n" +
-	"\x11UploadSensorBatch\x12\x12.sensor.SensorData\x1a\x16.sensor.ServerResponse(\x01B\x10Z\x0e./proto;sensorb\x06proto3"
+	"\x11UploadSensorBatch\x12\x12.sensor.SensorData\x1a\x16.sensor.ServerResponse(\x01\x12A\n" +
+	"\x0fLiveSensorChats\x12\x12.sensor.SensorData\x1a\x16.sensor.ServerResponse(\x010\x01B\x10Z\x0e./proto;sensorb\x06proto3"
 
 var (
 	file_proto_sensor_proto_rawDescOnce sync.Once
@@ -213,11 +214,13 @@ var file_proto_sensor_proto_depIdxs = []int32{
 	0, // 0: sensor.SensorService.SendSensorData:input_type -> sensor.SensorData
 	2, // 1: sensor.SensorService.GetSensorDataStream:input_type -> sensor.SensorRequest
 	0, // 2: sensor.SensorService.UploadSensorBatch:input_type -> sensor.SensorData
-	1, // 3: sensor.SensorService.SendSensorData:output_type -> sensor.ServerResponse
-	0, // 4: sensor.SensorService.GetSensorDataStream:output_type -> sensor.SensorData
-	1, // 5: sensor.SensorService.UploadSensorBatch:output_type -> sensor.ServerResponse
-	3, // [3:6] is the sub-list for method output_type
-	0, // [0:3] is the sub-list for method input_type
+	0, // 3: sensor.SensorService.LiveSensorChats:input_type -> sensor.SensorData
+	1, // 4: sensor.SensorService.SendSensorData:output_type -> sensor.ServerResponse
+	0, // 5: sensor.SensorService.GetSensorDataStream:output_type -> sensor.SensorData
+	1, // 6: sensor.SensorService.UploadSensorBatch:output_type -> sensor.ServerResponse
+	1, // 7: sensor.SensorService.LiveSensorChats:output_type -> sensor.ServerResponse
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name

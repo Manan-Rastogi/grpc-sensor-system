@@ -10,6 +10,7 @@ import (
 	"time"
 
 	proto "github.com/Manan-Rastogi/grpc-sensor-system/proto"
+	"github.com/Manan-Rastogi/grpc-sensor-system/server/interceptors"
 	"google.golang.org/grpc"
 )
 
@@ -79,7 +80,10 @@ func main() {
 		log.Fatal("Failed to listen: ", err.Error())
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptors.UnaryAuthInterceptors),
+		grpc.StreamInterceptor(interceptors.StreamAuthInterceptor),
+	)
 
 	proto.RegisterSensorServiceServer(grpcServer, &SensorServer{})
 

@@ -53,10 +53,9 @@ func Processor(inputChan <-chan *proto.SensorData, inputCountChan chan struct{},
 				wg.Done()
 			}() // release slot
 
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
+			
 
-			resp, err := client.SendSensorData(ctx, data)
+			resp, err := client.SendSensorData(withAuthCtx(), data)
 			if err != nil {
 				log.Println("Error receiving Data: ", err.Error())
 				outputChan <- &proto.ServerResponse{

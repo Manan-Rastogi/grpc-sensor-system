@@ -9,9 +9,11 @@ import (
 	"time"
 
 	proto "github.com/Manan-Rastogi/grpc-sensor-system/proto"
+	"github.com/Manan-Rastogi/grpc-sensor-system/server/interceptors"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 // go test -v -cover ./server -run ^TestIntegration_SendSensorData$
@@ -20,7 +22,10 @@ func startTestGRPCServer(t *testing.T) (proto.SensorServiceClient, func()) {
 
 	require.NoError(t, err)
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(interceptors.UnaryAuthInterceptors),
+		grpc.StreamInterceptor(interceptors.StreamAuthInterceptor),
+	)
 
 	proto.RegisterSensorServiceServer(grpcServer, &SensorServer{})
 
@@ -54,7 +59,10 @@ func TestIntegration_SendSensorData(t *testing.T) {
 		Timestamp:   time.Now().Unix(),
 	}
 
-	resp, err := client.SendSensorData(context.Background(), req)
+	// adding metadata for inceptors
+	ctx := withAuthCtx()
+
+	resp, err := client.SendSensorData(ctx, req)
 	require.NoError(t, err)
 	require.Contains(t, resp.GetStatus(), "Received")
 }
@@ -63,7 +71,12 @@ func TestIntegration_GetSensorDataStream(t *testing.T) {
 	client, cleanup := startTestGRPCServer(t)
 	defer cleanup()
 
-	stream, err := client.GetSensorDataStream(context.Background(), &proto.SensorRequest{
+	md := metadata.New(map[string]string{
+		"authorization": "Bearer super-secret-token",
+	})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	stream, err := client.GetSensorDataStream(ctx, &proto.SensorRequest{
 		SensorId: "test-stream-id",
 	})
 	require.NoError(t, err)
@@ -86,7 +99,12 @@ func TestIntegration_UploadSensorBatch(t *testing.T) {
 	client, cleanup := startTestGRPCServer(t)
 	defer cleanup()
 
-	stream, err := client.UploadSensorBatch(context.Background())
+	md := metadata.New(map[string]string{
+		"authorization": "Bearer super-secret-token",
+	})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+	stream, err := client.UploadSensorBatch(ctx)
 	require.NoError(t, err)
 
 	for i := 0; i < 5; i++ {
@@ -107,7 +125,11 @@ func TestIntegration_LiveSensorChats(t *testing.T) {
 	client, cleanup := startTestGRPCServer(t)
 	defer cleanup()
 
-	stream, err := client.LiveSensorChats(context.Background())
+	md := metadata.New(map[string]string{
+		"authorization": "Bearer super-secret-token",
+	})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	stream, err := client.LiveSensorChats(ctx)
 	require.NoError(t, err)
 
 	inputs := []*proto.SensorData{
@@ -131,4 +153,10 @@ func TestIntegration_LiveSensorChats(t *testing.T) {
 	}
 
 	_ = stream.CloseSend()
+}
+
+func withAuthCtx() context.Context {
+	return metadata.NewOutgoingContext(context.Background(), metadata.New(map[string]string{
+		"authorization": "Bearer secret123",
+	}))
 }

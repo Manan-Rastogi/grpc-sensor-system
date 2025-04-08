@@ -25,13 +25,13 @@ func main() {
 
 	client := proto.NewSensorServiceClient(conn)
 
-	// ProducerConsumerSoln(client)
+	ProducerConsumerSoln(client)
 
 	// ServerStreamingSoln(client)
 
 	// ClientStreamigSoln(client)
 
-	BidirectionalSoln(client)
+	// BidirectionalSoln(client)
 }
 
 func ClientStreamigSoln(client proto.SensorServiceClient) {
@@ -48,7 +48,7 @@ func ClientStreamigSoln(client proto.SensorServiceClient) {
 }
 
 func UploadSensorBatch(client proto.SensorServiceClient, dataList []*proto.SensorData) {
-	stream, err := client.UploadSensorBatch(context.Background())
+	stream, err := client.UploadSensorBatch(withAuthCtx())
 	if err != nil {
 		log.Fatalf("Error starting client stream: %v", err)
 	}

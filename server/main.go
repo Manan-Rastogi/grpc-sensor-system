@@ -12,6 +12,9 @@ import (
 	proto "github.com/Manan-Rastogi/grpc-sensor-system/proto"
 	"github.com/Manan-Rastogi/grpc-sensor-system/server/interceptors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // Implementing SensorServiceServer interface
@@ -23,9 +26,21 @@ type SensorServer struct {
 func (s *SensorServer) SendSensorData(ctx context.Context, data *proto.SensorData) (*proto.ServerResponse, error) {
 	log.Printf("Received Data from Sensors: %+v, %+v, %+v", data.Id, data.Temperature, data.Timestamp)
 
+	// 🧠 Read metadata
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		if clientIDs := md["client-id"]; len(clientIDs) > 0 {
+			log.Println("Client ID from metadata:", clientIDs[0])
+		}
+	}
+
+	// Error Handling in gRPC
+	if data.Temperature < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Temperature cannot be negative here")
+	}
+
 	// Here we can process data.....
 	////////////////////////////////
-
 	time.Sleep(4 * time.Second)
 
 	return &proto.ServerResponse{Status: "Received!"}, nil

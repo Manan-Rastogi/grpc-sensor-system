@@ -25,13 +25,13 @@ func main() {
 
 	client := proto.NewSensorServiceClient(conn)
 
-	ProducerConsumerSoln(client)
+	// ProducerConsumerSoln(client)
 
 	// ServerStreamingSoln(client)
 
 	// ClientStreamigSoln(client)
 
-	// BidirectionalSoln(client)
+	BidirectionalSoln(client)
 }
 
 func ClientStreamigSoln(client proto.SensorServiceClient) {

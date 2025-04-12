@@ -10,11 +10,15 @@ import (
 
 	proto "github.com/Manan-Rastogi/grpc-sensor-system/proto"
 	"github.com/google/uuid"
+	"google.golang.org/grpc/metadata"
 )
 
 func BidirectionalSoln(client proto.SensorServiceClient) {
+	ctx := metadata.NewOutgoingContext(context.Background(), metadata.New(map[string]string{
+		"authorization": "Bearer super-secret-token",
+	}))
 	// start the stream
-	stream, err := client.LiveSensorChats(context.Background())
+	stream, err := client.LiveSensorChats(ctx)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

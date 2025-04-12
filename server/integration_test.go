@@ -158,5 +158,6 @@ func TestIntegration_LiveSensorChats(t *testing.T) {
 func withAuthCtx() context.Context {
 	return metadata.NewOutgoingContext(context.Background(), metadata.New(map[string]string{
 		"authorization": "Bearer secret123",
+		"client-id":     "grpc-client-007",
 	}))
 }
